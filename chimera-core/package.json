@@ -1,0 +1,44 @@
+{
+  "name": "chimera-core",
+  "version": "0.1.0",
+  "description": "Chimera OS - Truth Engine Foundation",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "dev": "ts-node-dev --respawn lib/index.ts",
+    "demo": "ts-node demos/truth-engine-demo.ts"
+  },
+  "keywords": [
+    "ai",
+    "truth-verification",
+    "chimera",
+    "os"
+  ],
+  "author": "JB3ARD3N / 0R8 Intelligence",
+  "license": "PROPRIETARY",
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.6",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {},
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.ts"
+    ],
+    "collectCoverageFrom": [
+      "lib/**/*.ts",
+      "!lib/**/*.d.ts"
+    ]
+  }
+}
