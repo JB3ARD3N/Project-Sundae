@@ -26,3 +26,9 @@ chimera-core/node_modules/
 chimera-core/dist/
 chimera-cli/node_modules/
 chimera-cli/dist/
+
+# eko.vision specific
+eko-vision/node_modules/
+eko-vision/.next/
+eko-vision/out/
+eko-vision/.env.local

@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-900 text-white antialiased;
+  }
+}
+
+@layer utilities {
+  .bioluminescent-glow {
+    animation: glow 3s ease-in-out infinite;
+  }
+
+  @keyframes glow {
+    0%, 100% {
+      opacity: 0.6;
+      filter: drop-shadow(0 0 10px theme('colors.eko-cyan'));
+    }
+    50% {
+      opacity: 1;
+      filter: drop-shadow(0 0 30px theme('colors.eko-cyan'));
+    }
+  }
+
+  .glass-morphism {
+    @apply bg-slate-800/50 backdrop-blur-lg border border-slate-700/50;
+  }
+}
