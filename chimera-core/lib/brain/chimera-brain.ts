@@ -19,6 +19,7 @@ import { CostOptimizer } from '../cost/cost-optimizer';
 import { SecurityFortress } from '../security/security-fortress';
 import { MemorySystem } from './memory-system';
 import type { MemoryEntry } from './memory-system';
+import { apolloIntel } from '../intelligence/apollo-competitive-intel';
 
 export interface Idea {
   id: string;
@@ -50,12 +51,14 @@ export interface ValidationResult {
     tactical: number;       // 0-1: Is it modular/learnable?
     security: number;       // 0-1: Can it be secured?
     implementation: number; // 0-1: Can we build it?
+    competitive: number;    // 0-1: Avoids competitor anti-patterns?
     overall: number;        // Weighted average
   };
   shouldImplement: boolean;
   priority: 'critical' | 'high' | 'medium' | 'low';
   improvements: string[];
   risks: string[];
+  antiPatternWarnings?: string[]; // If idea resembles competitor pain points
 }
 
 export interface DailyReport {
@@ -156,15 +159,20 @@ export class ChimeraBrain {
     // Layer 4: Implementation filter (can we build it?)
     const implementationScore = await this.implementationFilter(idea);
 
+    // Layer 5: Competitive filter (avoid anti-patterns)
+    const competitiveResult = this.competitiveFilter(idea);
+    const competitiveScore = competitiveResult.score;
+
     // Calculate overall score (weighted)
     const overall =
-      truthScore * 0.25 +
-      strategicScore * 0.25 +
+      truthScore * 0.20 +
+      strategicScore * 0.20 +
       tacticalScore * 0.20 +
       securityScore * 0.15 +
-      implementationScore * 0.15;
+      implementationScore * 0.15 +
+      competitiveScore * 0.10; // Anti-pattern detection weighs 10%
 
-    const shouldImplement = overall > 0.75;
+    const shouldImplement = overall > 0.75 && !competitiveResult.isAntiPattern;
     const priority = this.calculatePriority(overall, idea);
 
     // Generate improvements
@@ -173,7 +181,8 @@ export class ChimeraBrain {
       strategic: strategicScore,
       tactical: tacticalScore,
       security: securityScore,
-      implementation: implementationScore
+      implementation: implementationScore,
+      competitive: competitiveScore
     });
 
     // Identify risks
@@ -182,7 +191,8 @@ export class ChimeraBrain {
       strategic: strategicScore,
       tactical: tacticalScore,
       security: securityScore,
-      implementation: implementationScore
+      implementation: implementationScore,
+      competitive: competitiveScore
     });
 
     return {
@@ -193,12 +203,14 @@ export class ChimeraBrain {
         tactical: tacticalScore,
         security: securityScore,
         implementation: implementationScore,
+        competitive: competitiveScore,
         overall
       },
       shouldImplement,
       priority,
       improvements,
-      risks
+      risks,
+      antiPatternWarnings: competitiveResult.warnings
     };
   }
 
@@ -437,6 +449,35 @@ export class ChimeraBrain {
     return 'low';
   }
 
+  /**
+   * Competitive filter - Detect anti-patterns from competitor mistakes
+   */
+  private competitiveFilter(idea: Idea): {
+    score: number;
+    isAntiPattern: boolean;
+    warnings: string[];
+  } {
+    const detection = apolloIntel.detectAntiPattern(idea.description);
+
+    if (detection.isAntiPattern) {
+      return {
+        score: 0.0, // Hard fail on anti-patterns
+        isAntiPattern: true,
+        warnings: [
+          `⚠️ ANTI-PATTERN DETECTED: ${detection.reason}`,
+          `💡 Suggestion: ${detection.suggestion}`
+        ]
+      };
+    }
+
+    // Good - doesn't match any competitor pain points
+    return {
+      score: 1.0,
+      isAntiPattern: false,
+      warnings: []
+    };
+  }
+
   private suggestImprovements(scores: Record<string, number>): string[] {
     const improvements: string[] = [];
 
@@ -455,6 +496,9 @@ export class ChimeraBrain {
     if (scores.implementation < 0.7) {
       improvements.push('Break down into smaller, more achievable milestones');
     }
+    if (scores.competitive < 0.7) {
+      improvements.push('Review competitor pain points - this may resemble patterns users hate');
+    }
 
     return improvements;
   }
@@ -470,6 +514,9 @@ export class ChimeraBrain {
     }
     if (!idea.cuttingEdge) {
       risks.push('Not cutting-edge - may be outdated quickly');
+    }
+    if (scores.competitive < 0.5) {
+      risks.push('⚠️ CRITICAL: Resembles competitor anti-pattern - high risk of user rejection');
     }
 
     return risks;

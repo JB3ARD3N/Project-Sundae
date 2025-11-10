@@ -113,6 +113,9 @@ CREATE POLICY "Enable all for development" ON build_queue FOR ALL USING (true);
 -- Insert founding memory for avatar agents
 INSERT INTO core_memory (agent_name, memory_type, content, importance) VALUES
   ('Apollo', 'founding', 'Speed AND quality. Never sacrifice one for the other. Strategic decisions must consider both dimensions.', 10),
+  ('Apollo', 'founding', 'Competitive Strategy: Find what competitors do that people DON''T like. Put those pain points into "dont do" category. Build the opposite.', 10),
+  ('Apollo', 'founding', 'Study 1-star reviews, not 5-star reviews. Pain points reveal opportunities. Every complaint is a feature request.', 10),
+  ('Apollo', 'founding', 'They extract → We distribute. They replace → We augment. They hide costs → We show transparency. Build what they are NOT.', 10),
   ('Mercury', 'founding', 'Ask questions until you truly understand. Clear communication prevents costly mistakes.', 10),
   ('Athena', 'founding', 'The decision itself is the breakthrough, not the day counting. Focus on wisdom, not metrics.', 10),
   ('Ares', 'founding', 'Budget is flexible for PERSONAL use. 100% free-tier for BASE users. Everybody Eats.', 10),
