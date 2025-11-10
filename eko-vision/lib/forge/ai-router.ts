@@ -136,6 +136,17 @@ export class AIRouter {
       message: '100% free routing for base users'
     };
   }
+
+  getCurrentUsage() {
+    const usage: Record<string, { used: number; limit: number }> = {};
+    Object.entries(this.providers).forEach(([key, provider]) => {
+      usage[key] = {
+        used: provider.usedToday,
+        limit: provider.dailyLimit
+      };
+    });
+    return usage;
+  }
 }
 
 export const aiRouter = new AIRouter();

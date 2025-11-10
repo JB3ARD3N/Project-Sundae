@@ -2,7 +2,7 @@ import { supabase } from './config';
 import JSZip from 'jszip';
 
 export class SupabaseUploader {
-  async uploadZip(file: File, projectName: string): Promise<{
+  async uploadZip(file: File, projectName: string = 'project'): Promise<{
     url: string;
     files: string[];
     projectId: string;
