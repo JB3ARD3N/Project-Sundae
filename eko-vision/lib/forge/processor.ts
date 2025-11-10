@@ -1,28 +1,21 @@
 import { aiRouter } from './ai-router';
 import { aiClients } from './ai-clients';
 
-interface ProcessResult {
-  fragments: string[];
-  code: string[];
-  handoff: string;
-  totalCost: number;
-}
-
 export class ForgeProcessor {
-  async process(input: string, userTier: 'base' | 'personal' = 'base'): Promise<ProcessResult> {
+  async process(input: string, userTier: 'base' | 'personal' | 'pro' = 'base') {
     const complexity = this.estimateComplexity(input);
-
-    const routing = aiRouter.route('fragment task', 3, userTier);
-    const fragmentPrompt = `Break this into 2-4 hour shippable microparts:
-"${input}"
-Return ONLY a JSON array of strings.`;
-
+    const routing = aiRouter.route('fragment', 3, userTier);
+    
     let fragments: string[] = [];
     try {
-      const fragmentResponse = await aiClients.callAI(routing.provider, fragmentPrompt);
-      const cleanText = fragmentResponse.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      fragments = JSON.parse(cleanText);
-    } catch (error) {
+      const fragmentResponse = await aiClients.callAI(
+        routing.provider,
+        `Break into 2-4hr microparts: "${input}". Return ONLY JSON array.`
+      );
+      fragments = JSON.parse(
+        fragmentResponse.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+      );
+    } catch {
       fragments = [input];
     }
 
@@ -31,37 +24,32 @@ Return ONLY a JSON array of strings.`;
 
     for (const fragment of fragments) {
       const codeRouting = aiRouter.route(fragment, complexity, userTier);
-      const codePrompt = `Generate production-ready TypeScript/React code for:
-"${fragment}"
-Context: Next.js 14, TypeScript, Tailwind, Supabase
-Return ONLY code, no explanations.`;
-
       try {
-        const codeResponse = await aiClients.callAI(codeRouting.provider, codePrompt);
+        const codeResponse = await aiClients.callAI(
+          codeRouting.provider,
+          `Generate TypeScript/React code for: "${fragment}". Context: Next.js 14, Tailwind, Supabase. Return ONLY code.`
+        );
         codeBlocks.push(codeResponse.text);
         totalCost += codeResponse.cost;
         aiRouter.recordUsage(codeRouting.provider, codeResponse.cost);
-      } catch (error) {
+      } catch {
         codeBlocks.push(`// TODO: ${fragment}`);
       }
     }
 
-    const handoff = `Built: ${input}\nFragments: ${fragments.join(', ')}\nCost: $${totalCost.toFixed(4)}`;
-
-    return { fragments, code: codeBlocks, handoff, totalCost };
+    return {
+      fragments,
+      code: codeBlocks,
+      handoff: `Built: ${input}\nCost: $${totalCost.toFixed(4)}`,
+      totalCost
+    };
   }
 
   private estimateComplexity(input: string): number {
-    const keywords = {
-      simple: ['button', 'text', 'display'],
-      medium: ['form', 'api', 'component'],
-      complex: ['auth', 'database', 'system']
-    };
-
     let score = 5;
     const lower = input.toLowerCase();
-    keywords.simple.forEach(k => lower.includes(k) && (score -= 1));
-    keywords.complex.forEach(k => lower.includes(k) && (score += 2));
+    ['button', 'text', 'display'].forEach(k => lower.includes(k) && (score -= 1));
+    ['auth', 'database', 'system'].forEach(k => lower.includes(k) && (score += 2));
     return Math.max(1, Math.min(10, score));
   }
 }

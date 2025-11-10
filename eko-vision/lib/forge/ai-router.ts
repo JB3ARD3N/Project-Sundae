@@ -58,7 +58,34 @@ export class AIRouter {
     }
   };
 
-  route(task: string, complexity: number, userTier: 'base' | 'personal' = 'base'): RoutingDecision {
+  route(task: string, complexity: number, userTier: 'base' | 'personal' | 'pro' = 'base'): RoutingDecision {
+    // Pro tier (Prometheus) - always use best models
+    if (userTier === 'pro') {
+      if (complexity < 4) {
+        return {
+          provider: 'claude_sonnet',
+          model: this.providers.claude_sonnet.name,
+          estimatedCost: 0.015,
+          reasoning: 'Pro (Prometheus) - Claude for speed'
+        };
+      } else if (complexity < 7) {
+        return {
+          provider: 'gemini_pro',
+          model: this.providers.gemini_pro.name,
+          estimatedCost: 0.025,
+          reasoning: 'Pro (Prometheus) - Gemini Pro for balance'
+        };
+      } else {
+        return {
+          provider: 'gpt5',
+          model: this.providers.gpt5.name,
+          estimatedCost: 0.1,
+          reasoning: 'Pro (Prometheus) - GPT-5 for complex'
+        };
+      }
+    }
+
+    // Base tier - 100% free routing (Everybody Eats)
     if (userTier === 'base') {
       const freeProvider = this.getAvailableFree();
       if (freeProvider) {
@@ -66,7 +93,7 @@ export class AIRouter {
           provider: freeProvider,
           model: this.providers[freeProvider].name,
           estimatedCost: 0,
-          reasoning: '100% free-tier for base users (Everybody Eats)'
+          reasoning: '100% free-tier (Everybody Eats)'
         };
       }
       return {
@@ -77,32 +104,29 @@ export class AIRouter {
       };
     }
 
-    if (userTier === 'personal') {
-      if (complexity < 4) {
-        return {
-          provider: 'gemini_pro',
-          model: this.providers.gemini_pro.name,
-          estimatedCost: 0.005,
-          reasoning: 'Personal - fast for simple'
-        };
-      } else if (complexity < 7) {
-        return {
-          provider: 'claude_sonnet',
-          model: this.providers.claude_sonnet.name,
-          estimatedCost: 0.01,
-          reasoning: 'Personal - Claude for medium'
-        };
-      } else {
-        return {
-          provider: 'gpt5',
-          model: this.providers.gpt5.name,
-          estimatedCost: 0.05,
-          reasoning: 'Personal - GPT-5 for complex'
-        };
-      }
+    // Personal tier - smart routing
+    if (complexity < 4) {
+      return {
+        provider: 'gemini_pro',
+        model: this.providers.gemini_pro.name,
+        estimatedCost: 0.005,
+        reasoning: 'Personal - fast for simple'
+      };
+    } else if (complexity < 7) {
+      return {
+        provider: 'claude_sonnet',
+        model: this.providers.claude_sonnet.name,
+        estimatedCost: 0.01,
+        reasoning: 'Personal - Claude for medium'
+      };
+    } else {
+      return {
+        provider: 'gpt5',
+        model: this.providers.gpt5.name,
+        estimatedCost: 0.05,
+        reasoning: 'Personal - GPT-5 for complex'
+      };
     }
-
-    return this.getDefaultRoute();
   }
 
   private getAvailableFree(): string | null {
@@ -110,15 +134,6 @@ export class AIRouter {
       .filter(([_, p]) => p.tier === 'free' && p.usedToday < p.dailyLimit)
       .sort((a, b) => b[1].maxTokens - a[1].maxTokens);
     return freeProviders.length > 0 ? freeProviders[0][0] : null;
-  }
-
-  private getDefaultRoute(): RoutingDecision {
-    return {
-      provider: 'groq_llama',
-      model: this.providers.groq_llama.name,
-      estimatedCost: 0,
-      reasoning: 'Default free tier'
-    };
   }
 
   recordUsage(provider: string, cost: number) {

@@ -37,9 +37,9 @@ export class AIClients {
       })
     });
 
-    if (!response.ok) throw new Error(`Claude API error: ${response.status}`);
-    const data = await response.json();
+    if (!response.ok) throw new Error(`Claude error: ${response.status}`);
 
+    const data = await response.json();
     return {
       text: data.content[0].text,
       tokensUsed: data.usage.input_tokens + data.usage.output_tokens,
@@ -50,7 +50,6 @@ export class AIClients {
 
   private async callGemini(provider: string, prompt: string): Promise<AIResponse> {
     const model = provider === 'gemini_pro' ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
-
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GOOGLE_API_KEY}`,
       {
@@ -62,9 +61,9 @@ export class AIClients {
       }
     );
 
-    if (!response.ok) throw new Error(`Gemini API error: ${response.status}`);
-    const data = await response.json();
+    if (!response.ok) throw new Error(`Gemini error: ${response.status}`);
 
+    const data = await response.json();
     return {
       text: data.candidates[0].content.parts[0].text,
       tokensUsed: data.usageMetadata?.totalTokenCount || 0,
@@ -87,9 +86,9 @@ export class AIClients {
       })
     });
 
-    if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
-    const data = await response.json();
+    if (!response.ok) throw new Error(`OpenAI error: ${response.status}`);
 
+    const data = await response.json();
     return {
       text: data.choices[0].message.content,
       tokensUsed: data.usage.total_tokens,
@@ -112,9 +111,9 @@ export class AIClients {
       })
     });
 
-    if (!response.ok) throw new Error(`Groq API error: ${response.status}`);
-    const data = await response.json();
+    if (!response.ok) throw new Error(`Groq error: ${response.status}`);
 
+    const data = await response.json();
     return {
       text: data.choices[0].message.content,
       tokensUsed: data.usage?.total_tokens || 0,

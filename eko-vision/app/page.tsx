@@ -30,7 +30,7 @@ export default function Home() {
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-400">Status: <span className="text-green-400 font-semibold">Operational</span></p>
-              <p className="text-xs text-gray-500">v1.0.0-alpha</p>
+              <p className="text-xs text-gray-500">v1.0.0-alpha • <span className="text-eko-gold">Pro</span> Ready</p>
             </div>
           </div>
         </div>
@@ -104,7 +104,7 @@ export default function Home() {
               "Daily +1% minimum. Everybody Eats. Build don't buy."
             </p>
             <p className="text-xs text-gray-600 mt-2">
-              Powered by Chimera Brain • Built with Truth Engine
+              Powered by Chimera Brain • Built with Truth Engine • <span className="text-eko-gold">Prometheus Pro</span> Available
             </p>
           </div>
         </div>
