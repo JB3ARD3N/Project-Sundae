@@ -7,11 +7,18 @@ import KPIMetricsSwitches from '@/components/os/KPIMetricsSwitches';
 import DevToolsPanel from '@/components/os/DevToolsPanel';
 import AutomationPipeline from '@/components/os/AutomationPipeline';
 import SystemStatus from '@/components/os/SystemStatus';
+import BootSequence from '@/components/os/BootSequence';
 
 export default function ChimeraOS() {
   const [brainPower, setBrainPower] = useState(50); // 0-100 scale
   const [activeMetrics, setActiveMetrics] = useState<string[]>(['intelligence', 'speed', 'cost']);
   const [isPipelineRunning, setIsPipelineRunning] = useState(false);
+  const [isBooting, setIsBooting] = useState(true);
+
+  // Show boot sequence on first load
+  if (isBooting) {
+    return <BootSequence onComplete={() => setIsBooting(false)} />;
+  }
 
   return (
     <main className="min-h-screen bg-black text-white overflow-hidden">
