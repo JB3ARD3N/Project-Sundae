@@ -14,18 +14,17 @@ export default function BudgetMonitor() {
   }, []);
 
   const updateUsage = () => {
-    const currentUsage = aiRouter.getCurrentUsage();
+    const currentUsage = aiRouter.getBudgetStatus();
     setUsage(currentUsage);
 
-    // Calculate health based on usage
-    const maxUsagePercent = Math.max(
-      ...Object.values(currentUsage).map((u: any) =>
-        u.limit ? (u.used / u.limit) * 100 : 0
-      )
-    );
+    // Calculate health based on free tier usage
+    const freeUsage = currentUsage.freeUsage || 0;
+    const maxFreeLimit = 15900; // Sum of free tier limits
 
-    if (maxUsagePercent > 80) setHealth('critical');
-    else if (maxUsagePercent > 60) setHealth('warning');
+    const usagePercent = (freeUsage / maxFreeLimit) * 100;
+
+    if (usagePercent > 80) setHealth('critical');
+    else if (usagePercent > 60) setHealth('warning');
     else setHealth('healthy');
   };
 
@@ -55,33 +54,38 @@ export default function BudgetMonitor() {
       </div>
 
       <div className="space-y-3 mb-4">
-        {Object.entries(usage).map(([provider, data]: [string, any]) => {
-          const percent = data.limit ? (data.used / data.limit) * 100 : 0;
+        <div className="bg-slate-900/50 p-3 rounded-lg border border-eko-gold/20">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-gray-300">
+              Free Tier Usage
+            </span>
+            <span className="text-xs text-gray-500">
+              {usage.freeUsage || 0} requests today
+            </span>
+          </div>
 
-          return (
-            <div key={provider} className="bg-slate-900/50 p-3 rounded-lg border border-eko-gold/20">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-gray-300 capitalize">
-                  {provider}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {data.used.toLocaleString()} / {data.limit.toLocaleString()}
-                </span>
-              </div>
+          <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                health === 'critical' ? 'bg-red-500' :
+                health === 'warning' ? 'bg-yellow-500' :
+                'bg-green-500'
+              }`}
+              style={{ width: `${Math.min(((usage.freeUsage || 0) / 15900) * 100, 100)}%` }}
+            />
+          </div>
+        </div>
 
-              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    percent > 80 ? 'bg-red-500' :
-                    percent > 60 ? 'bg-yellow-500' :
-                    'bg-green-500'
-                  }`}
-                  style={{ width: `${Math.min(percent, 100)}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
+        <div className="bg-slate-900/50 p-3 rounded-lg border border-eko-gold/20">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-gray-300">
+              Tier Health
+            </span>
+            <span className={`text-xs font-bold ${getHealthColor()}`}>
+              {usage.freeTierHealth || 'HEALTHY'}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="bg-eko-gold/10 border border-eko-gold/30 rounded-lg p-4 text-center">

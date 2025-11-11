@@ -45,7 +45,8 @@ export default function ZipUploader() {
     setResult(null);
 
     try {
-      const uploadResult = await uploader.uploadZip(file);
+      const projectName = file.name.replace('.zip', '');
+      const uploadResult = await uploader.uploadZip(file, projectName);
       setResult(uploadResult);
     } catch (error) {
       console.error('Upload failed:', error);
