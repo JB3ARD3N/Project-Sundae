@@ -33,6 +33,15 @@ export type { IntentType, IntentResult } from './intent-engine';
 export { VoiceSystem } from './voice-system';
 export type { VoiceConfig, GlyphCompression } from './voice-system';
 
+// Import classes for factory function
+import { ChimeraBrain } from './brain';
+import { TruthEngine } from './truth-engine';
+import { AgentMesh } from './agent-mesh';
+import { CostOptimizer } from './cost-optimizer';
+import { MemorySystem } from './memory-system';
+import { IntentEngine } from './intent-engine';
+import { VoiceSystem } from './voice-system';
+
 // Factory function to create initialized system
 export function createChimeraSystem() {
   const truthEngine = new TruthEngine();

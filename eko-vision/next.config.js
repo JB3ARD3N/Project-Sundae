@@ -81,10 +81,6 @@ const nextConfig = {
     return config;
   },
 
-  // Experimental features
-  experimental: {
-    serverActions: true,
-  },
 };
 
 module.exports = nextConfig;
