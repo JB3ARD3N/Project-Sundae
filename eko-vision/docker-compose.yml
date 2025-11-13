@@ -1,0 +1,74 @@
+# CHIMERA OS - Docker Compose Configuration
+# Complete stack deployment for eKo.vision
+
+version: '3.8'
+
+services:
+  # Main application
+  chimera-os:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chimera-os
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    networks:
+      - chimera-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/chimera/status', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.chimera.service=main"
+      - "com.chimera.version=1.0.0"
+
+  # Redis cache (optional - for future features)
+  redis:
+    image: redis:7-alpine
+    container_name: chimera-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - chimera-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: chimera-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - chimera-os
+    networks:
+      - chimera-network
+
+networks:
+  chimera-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local

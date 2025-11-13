@@ -8,10 +8,52 @@ interface SystemStatusProps {
   isPipelineRunning: boolean;
 }
 
+interface SystemStats {
+  activeAgents: number;
+  totalValidations: number;
+  averageConfidence: number;
+  costToday: number;
+}
+
 export default function SystemStatus({ brainPower, isPipelineRunning }: SystemStatusProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
   const [cpuUsage] = useState(Math.round(brainPower * 0.8));
   const [memoryUsage] = useState(Math.round(brainPower * 0.6));
+
+  // Fetch real system stats from API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/chimera/status');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setSystemStats({
+              activeAgents: result.data.activeAgents || 7,
+              totalValidations: result.data.totalValidations || 0,
+              averageConfidence: result.data.averageConfidence || 0,
+              costToday: result.data.costToday || 0,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch system stats:', error);
+        // Fallback to calculated values
+        setSystemStats({
+          activeAgents: Math.floor(brainPower * 2.5),
+          totalValidations: 0,
+          averageConfidence: 0,
+          costToday: 0,
+        });
+      }
+    };
+
+    fetchStats();
+    const interval = setInterval(fetchStats, 5000); // Update every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [brainPower]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -56,7 +98,9 @@ export default function SystemStatus({ brainPower, isPipelineRunning }: SystemSt
       {/* Agents */}
       <div className="hidden md:block">
         <p className="text-xs text-gray-500">AGENTS</p>
-        <p className="text-sm font-mono text-emerald-400">{Math.floor(brainPower * 2.5)}</p>
+        <p className="text-sm font-mono text-emerald-400">
+          {systemStats ? systemStats.activeAgents : Math.floor(brainPower * 2.5)}
+        </p>
       </div>
 
       {/* Time */}
